@@ -1,0 +1,10 @@
+{
+  "additionalFiles": "",
+  "builtInToolsFolders": "",
+  "compiler.optimization_flags": "",
+  "customBuildProperties": "build.warn_data_percentage=75",
+  "fqbn": "arduino:avr:uno",
+  "hardwareFolders": "/home/cwood/snap/arduino-cli/41/.arduino15/packages",
+  "otherLibrariesFolders": "/home/cwood/snap/arduino-cli/41/Arduino/libraries",
+  "sketchLocation": "/mnt/c/Users/woodc/TrshProto"
+}

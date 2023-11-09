@@ -1,0 +1,3 @@
+default_port: COM3
+output_path: build
+default_fqbn: arduino:avr:uno
