@@ -1,8 +1,19 @@
+#include <Adafruit_ADXL345_U.h>
+#include <Adafruit_Sensor.h>
 #include <MPU6050.h>
 #include <SoftwareSerial.h>
 #include <Wire.h>
+struct PVector {
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    double mag() {
+        return sqrt(x * x + y * y + z * z);
+    }
+};
 MPU6050 mpu;
 SoftwareSerial mySerial(3, 2); // RX, TX
+Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified();
 void checkGyroSettings();
 void updateSerial() {
     delay(500);
@@ -43,91 +54,56 @@ void setup() {
     Serial.println("Hello World");
     Serial.println("Init MPU");
     int i = 0;
-    while (!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_4G)) {
-        Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
-        delay(500);
-        if (i++ > 10) {
-            Serial.println("Failed to init MPU6050");
-            break;
-        }
+    // initSimThing();
+    // etPhoneHome("01", "7038250271", "Hello World");
+    // mpu.calibrateGyro();
+    if (!accel.begin()) {
+        Serial.println("no acc :(");
+    } else {
+        Serial.println("acc :)");
     }
-    initSimThing();
-    etPhoneHome("01", "7038250271", "Hello World");
-    mpu.calibrateGyro();
-    checkGyroSettings();
-}
-void checkGyroSettings() {
-    Serial.println();
-
-    Serial.print(" * Sleep Mode:        ");
-    Serial.println(mpu.getSleepEnabled() ? "Enabled" : "Disabled");
-
-    Serial.print(" * Clock Source:      ");
-    switch (mpu.getClockSource()) {
-    case MPU6050_CLOCK_KEEP_RESET:
-        Serial.println("Stops the clock and keeps the timing generator in reset");
-        break;
-    case MPU6050_CLOCK_EXTERNAL_19MHZ:
-        Serial.println("PLL with external 19.2MHz reference");
-        break;
-    case MPU6050_CLOCK_EXTERNAL_32KHZ:
-        Serial.println("PLL with external 32.768kHz reference");
-        break;
-    case MPU6050_CLOCK_PLL_ZGYRO:
-        Serial.println("PLL with Z axis gyroscope reference");
-        break;
-    case MPU6050_CLOCK_PLL_YGYRO:
-        Serial.println("PLL with Y axis gyroscope reference");
-        break;
-    case MPU6050_CLOCK_PLL_XGYRO:
-        Serial.println("PLL with X axis gyroscope reference");
-        break;
-    case MPU6050_CLOCK_INTERNAL_8MHZ:
-        Serial.println("Internal 8MHz oscillator");
-        break;
-    }
-
-    Serial.print(" * Gyroscope:         ");
-    switch (mpu.getScale()) {
-    case MPU6050_SCALE_2000DPS:
-        Serial.println("2000 dps");
-        break;
-    case MPU6050_SCALE_1000DPS:
-        Serial.println("1000 dps");
-        break;
-    case MPU6050_SCALE_500DPS:
-        Serial.println("500 dps");
-        break;
-    case MPU6050_SCALE_250DPS:
-        Serial.println("250 dps");
-        break;
-    }
-
-    Serial.print(" * Gyroscope offsets: ");
-    Serial.print(mpu.getGyroOffsetX());
-    Serial.print(" / ");
-    Serial.print(mpu.getGyroOffsetY());
-    Serial.print(" / ");
-    Serial.println(mpu.getGyroOffsetZ());
 }
 
+int time = 0;
+int sleep = 50;
+int lastFallTime = -10000;
+int fallBreak = 2000;
+const char* message = "fall yeet";
 void loop() {
     while (1) {
-        Serial.println("ur mom");
-        delay(1000);
-        Vector normGyro = mpu.readNormalizeGyro();
-        Vector normAccel = mpu.readNormalizeAccel();
-        Serial.print(" Xgyro = ");
-        Serial.print(normGyro.XAxis);
-        Serial.print(" Ygyro = ");
-        Serial.print(normGyro.YAxis);
-        Serial.print(" Zgyro = ");
-        Serial.println(normGyro.ZAxis);
-        Serial.print(" Xaccel = ");
-        Serial.print(normAccel.XAxis);
-        Serial.print(" Yaccel = ");
-        Serial.print(normAccel.YAxis);
-        Serial.print(" Zaccel = ");
-        Serial.println(normAccel.ZAxis);
+        // Serial.println("ur mom");
+        // delay(1000);
+        sensors_event_t event;
+        accel.getEvent(&event);
+        // Serial.print("X: ");
+        // Serial.print(event.acceleration.x);
+        // Serial.print("");
+        // Serial.print(" Y: ");
+        // Serial.print(event.acceleration.y);
+        // Serial.print("");
+        // Serial.print(" Z: ");
+        // Serial.print(event.acceleration.z);
+        // Serial.print("");
+        // Serial.println("m/s^2 ");
+        PVector sdf;
+        sdf.x = event.acceleration.x;
+        sdf.y = event.acceleration.y;
+        sdf.z = event.acceleration.z;
+        // Serial.print("mag: ");
+        // Serial.println(sdf.mag() - 9.8);
+        if (sdf.mag() - 10.0 > 3.0) {
+            if (time - lastFallTime > fallBreak) {
+                Serial.println(message);
+                lastFallTime = time;
+            }
+        }
+        if (abs(sdf.mag() - 9.8) < 1.5 && (abs(sdf.x) > abs(sdf.z) || abs(sdf.y) > abs(sdf.z) || (abs(sdf.z) > 4.5 && sdf.z < 0))) {
+            if (time - lastFallTime > fallBreak) {
+                Serial.println(message);
+                lastFallTime = time;
+            }
+        }
+        delay(sleep);
+        time += sleep;
     }
 }
