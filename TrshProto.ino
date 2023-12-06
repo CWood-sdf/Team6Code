@@ -18,10 +18,17 @@ void checkGyroSettings();
 void updateSerial() {
     delay(500);
     while (Serial.available()) {
-        mySerial.write(Serial.read()); // Forward what Serial received to Software Serial Port
+        String serialIn = Serial.readString();
+        Serial.print("Serial in: ");
+        Serial.println(serialIn);
+        mySerial.println(serialIn); // Forward what Serial received to Software Serial Port
     }
-    while (mySerial.available()) {
-        Serial.write(mySerial.read()); // Forward what Software Serial received to Serial Port
+    int i = 2000;
+    while (mySerial.available() || i < 100) {
+        String serialOut = mySerial.readString();
+        Serial.println(serialOut); // Forward what Software Serial received to Serial Port
+        i++;
+        delay(50);
     }
 }
 void etPhoneHome(char* countrycode, char* phonenumber, char* message) {
@@ -53,8 +60,20 @@ void setup() {
     Serial.begin(9600);
     Serial.println("Hello World");
     Serial.println("Init MPU");
+    delay(1000);
     int i = 0;
-    // initSimThing();
+    while (1) {
+        updateSerial();
+    }
+    mySerial.println("AT"); // Once the handshake test is successful, it will back to OK
+    delay(2000);
+    updateSerial();
+    mySerial.println("AT+CSQ"); // Signal quality test, value range is 0-31 , 31 is the best
+    updateSerial();
+    mySerial.println("AT+CCID"); // Read SIM information to confirm whether the SIM is plugged
+    updateSerial();
+    mySerial.println("AT+CREG?"); // Check whether it has registered in the network
+    updateSerial();
     // etPhoneHome("01", "7038250271", "Hello World");
     // mpu.calibrateGyro();
     if (!accel.begin()) {
@@ -62,48 +81,70 @@ void setup() {
     } else {
         Serial.println("acc :)");
     }
+    sensors_event_t event;
+    accel.getEvent(&event);
+    PVector sdf;
+    sdf.x = event.acceleration.x;
+    sdf.y = -event.acceleration.z;
+    sdf.z = -event.acceleration.y;
+    if (abs(10 - sdf.z) > 2) {
+        Serial.println("Incorrect acc orientation");
+        Serial.print("X: ");
+        Serial.print(sdf.x);
+        Serial.print(", Y: ");
+        Serial.print(sdf.y);
+        Serial.print(", Z: ");
+        Serial.println(sdf.z);
+    }
 }
 
-int time = 0;
+long time = 0;
 int sleep = 50;
-int lastFallTime = -10000;
-int fallBreak = 2000;
-const char* message = "fall yeet";
+long lastFallTime = -10000;
+long fallBreak = 4000;
+const char* message = "u good bro?";
 void loop() {
-    while (1) {
-        // Serial.println("ur mom");
-        // delay(1000);
-        sensors_event_t event;
-        accel.getEvent(&event);
-        // Serial.print("X: ");
-        // Serial.print(event.acceleration.x);
-        // Serial.print("");
-        // Serial.print(" Y: ");
-        // Serial.print(event.acceleration.y);
-        // Serial.print("");
-        // Serial.print(" Z: ");
-        // Serial.print(event.acceleration.z);
-        // Serial.print("");
-        // Serial.println("m/s^2 ");
-        PVector sdf;
-        sdf.x = event.acceleration.x;
-        sdf.y = event.acceleration.y;
-        sdf.z = event.acceleration.z;
-        // Serial.print("mag: ");
-        // Serial.println(sdf.mag() - 9.8);
-        if (sdf.mag() - 10.0 > 3.0) {
-            if (time - lastFallTime > fallBreak) {
-                Serial.println(message);
-                lastFallTime = time;
-            }
-        }
-        if (abs(sdf.mag() - 9.8) < 1.5 && (abs(sdf.x) > abs(sdf.z) || abs(sdf.y) > abs(sdf.z) || (abs(sdf.z) > 4.5 && sdf.z < 0))) {
-            if (time - lastFallTime > fallBreak) {
-                Serial.println(message);
-                lastFallTime = time;
-            }
-        }
-        delay(sleep);
-        time += sleep;
+    if (time % 10000 == 0) {
+        updateSerial();
+        Serial.println("update bro");
     }
+    if (time == 30000) {
+        Serial.println("sdfaksd");
+        etPhoneHome("01", "7038250271", "Hello World");
+    }
+
+    // Serial.println("ur mom");
+    // delay(1000);
+    sensors_event_t event;
+    accel.getEvent(&event);
+    // Serial.print("X: ");
+    // Serial.println("m/s^2 ");
+    PVector acc;
+    acc.x = event.acceleration.x;
+    acc.y = -event.acceleration.z;
+    acc.z = -event.acceleration.y;
+    // Serial.print(sdf.x);
+    // Serial.print(", ");
+    // // Serial.print(" Y: ");
+    // Serial.print(sdf.y);
+    // Serial.print(", ");
+    // // Serial.print(" Z: ");
+    // Serial.print(sdf.z);
+    // Serial.print(",\n");
+    // Serial.print("mag: ");
+    // Serial.println(sdf.mag() - 9.8);
+    if (acc.mag() - 10.0 > 3.0) {
+        if (time - lastFallTime > fallBreak) {
+            Serial.println(message);
+            lastFallTime = time;
+        }
+    }
+    if (abs(acc.mag() - 9.8) < 1.5 && (abs(acc.x) > abs(acc.z) || abs(acc.y) > abs(acc.z) || (abs(acc.z) > 4.5 && acc.z < 0))) {
+        if (time - lastFallTime > fallBreak) {
+            Serial.println(message);
+            lastFallTime = time;
+        }
+    }
+    delay(sleep);
+    time += sleep;
 }
