@@ -3,7 +3,7 @@
 #include <MPU6050.h>
 #include <SoftwareSerial.h>
 #include <Wire.h>
-struct PVector {
+struct Vector3D {
     double x = 0.0;
     double y = 0.0;
     double z = 0.0;
@@ -83,7 +83,7 @@ void setup() {
     }
     sensors_event_t event;
     accel.getEvent(&event);
-    PVector sdf;
+    Vector3D sdf;
     sdf.x = event.acceleration.x;
     sdf.y = -event.acceleration.z;
     sdf.z = -event.acceleration.y;
@@ -119,7 +119,7 @@ void loop() {
     accel.getEvent(&event);
     // Serial.print("X: ");
     // Serial.println("m/s^2 ");
-    PVector acc;
+    Vector3D acc;
     acc.x = event.acceleration.x;
     acc.y = -event.acceleration.z;
     acc.z = -event.acceleration.y;
