@@ -35,15 +35,16 @@ void etPhoneHome(char* countrycode, char* phonenumber, char* message) {
     mySerial.println("AT"); // Once the handshake test is successful, it will back to OK
     updateSerial();
     mySerial.println("AT+CMGF=1"); // Configuring TEXT mode
-    updateSerial();
+    // updateSerial();
     mySerial.print("AT+CMGS=\"+"); // change ZZ with country code and xxxxxxxxxxx with phone number to sms
     mySerial.print(countrycode);
     mySerial.print(phonenumber);
     mySerial.println("\"");
-    updateSerial();
+    // updateSerial();
     mySerial.print(message); // text content
-    updateSerial();
+    // updateSerial();
     mySerial.write(26);
+    mySerial.println();
 }
 void initSimThing() {
     mySerial.println("AT"); // Once the handshake test is successful, it will back to OK
@@ -58,22 +59,25 @@ void initSimThing() {
 void setup() {
     mySerial.begin(9600);
     Serial.begin(9600);
-    Serial.println("Hello World");
-    Serial.println("Init MPU");
-    delay(1000);
+    // Serial.println("Hello World");
+    // Serial.println("Init MPU");
+    delay(5000);
     int i = 0;
+    Serial.println("Start msg");
+    // etPhoneHome("01", "7038250271", "Hsdfsdello World");
+    Serial.println("Msg sent");
     while (1) {
         updateSerial();
     }
-    mySerial.println("AT"); // Once the handshake test is successful, it will back to OK
-    delay(2000);
-    updateSerial();
-    mySerial.println("AT+CSQ"); // Signal quality test, value range is 0-31 , 31 is the best
-    updateSerial();
-    mySerial.println("AT+CCID"); // Read SIM information to confirm whether the SIM is plugged
-    updateSerial();
-    mySerial.println("AT+CREG?"); // Check whether it has registered in the network
-    updateSerial();
+    // mySerial.println("AT"); // Once the handshake test is successful, it will back to OK
+    // delay(2000);
+    // updateSerial();
+    // mySerial.println("AT+CSQ"); // Signal quality test, value range is 0-31 , 31 is the best
+    // updateSerial();
+    // mySerial.println("AT+CCID"); // Read SIM information to confirm whether the SIM is plugged
+    // updateSerial();
+    // mySerial.println("AT+CREG?"); // Check whether it has registered in the network
+    // updateSerial();
     // etPhoneHome("01", "7038250271", "Hello World");
     // mpu.calibrateGyro();
     if (!accel.begin()) {
@@ -104,14 +108,14 @@ long lastFallTime = -10000;
 long fallBreak = 4000;
 const char* message = "u good bro?";
 void loop() {
-    if (time % 10000 == 0) {
-        updateSerial();
-        Serial.println("update bro");
-    }
-    if (time == 30000) {
-        Serial.println("sdfaksd");
-        etPhoneHome("01", "7038250271", "Hello World");
-    }
+    // if (time % 10000 == 0) {
+    //     updateSerial();
+    //     Serial.println("update bro");
+    // }
+    // if (time == 30000) {
+    //     Serial.println("sdfaksd");
+    //     etPhoneHome("01", "7038250271", "Hello World");
+    // }
 
     // Serial.println("ur mom");
     // delay(1000);
